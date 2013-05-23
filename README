@@ -1,0 +1,6 @@
+- Create an account on oauth app
+- Login via admin
+- Query with client_id in argument (default scope)
+  /oauth/authorize/roger/?redirect_uri=http%3A%2F%2Fwebstack.fr
+
+-
