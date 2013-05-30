@@ -124,7 +124,8 @@ INSTALLED_APPS = (
     'django.contrib.admin',
     'oauth.core',
     'oauth.accounts',
-    'oauth.providers',
+    'oauth.web_provider',
+    'oauth.backend_provider',
 )
 
 # A sample logging configuration. The only tangible logging

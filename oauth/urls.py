@@ -6,6 +6,6 @@ admin.autodiscover()
 urlpatterns = patterns('',
     url(r'^core/', include('oauth.core.urls')),
     url(r'^accounts/', include('oauth.accounts.urls')),
-    url(r'^oauth/', include('oauth.providers.urls')),
+    url(r'^oauth/', include('oauth.web_provider.urls')),
     url(r'^admin/', include(admin.site.urls)),
 )

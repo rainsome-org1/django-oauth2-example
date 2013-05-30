@@ -8,9 +8,8 @@ from django.core.exceptions import ObjectDoesNotExist
 from django.core.urlresolvers import reverse
 from django.http import HttpResponse
 from django.utils import timezone
-from django.views.decorators.csrf import csrf_exempt
 
-from oauth.providers import models as providers_models
+from oauth.web_provider import models as web_provider_models
 from oauthlib.oauth2 import RequestValidator, WebApplicationServer
 from oauthlib.oauth2.ext.django import OAuth2ProviderDecorator
 
@@ -20,25 +19,25 @@ log.addHandler(logging.StreamHandler(sys.stdout))
 log.setLevel(logging.DEBUG)
 
 
-class SkeletonValidator(RequestValidator):
+class WebValidator(RequestValidator):
 
     # Ordered roughly in order of apperance in the authorization grant flow
 
     # Pre- and Post-authorization.
 
     def validate_client_id(self, client_id, request, *args, **kwargs):
-        return providers_models.Client.objects.filter(client_id=client_id).exists()
+        return web_provider_models.Client.objects.filter(client_id=client_id).exists()
 
     def validate_redirect_uri(self, client_id, redirect_uri, request, *args, **kwargs):
         # Is the client allowed to use the supplied redirect_uri? i.e. has
         # the client previously registered this EXACT redirect uri.
-        return providers_models.Client.objects.filter(
+        return web_provider_models.Client.objects.filter(
             client_id=client_id,
             redirect_uris__contains=redirect_uri).exists()
 
     def get_default_redirect_uri(self, client_id, request, *args, **kwargs):
         try:
-            client = providers_models.Client.objects.filter(client_id=client_id)
+            client = web_provider_models.Client.objects.filter(client_id=client_id)
             return client.default_scopes
         except ObjectDoesNotExist:
             return None
@@ -46,7 +45,7 @@ class SkeletonValidator(RequestValidator):
     def validate_scopes(self, client_id, scopes, client, request, *args, **kwargs):
         # Is the client allowed to access the requested scopes?
         try:
-            allowed_scopes = providers_models.Client.objects.get(client_id=client_id).scopes.split()
+            allowed_scopes = web_provider_models.Client.objects.get(client_id=client_id).scopes.split()
         except ObjectDoesNotExist:
             return False
 
@@ -59,7 +58,7 @@ class SkeletonValidator(RequestValidator):
         # Scopes a client will authorize for if none are supplied in the
         # authorization request.
         try:
-            return providers_models.Client.objects.get(client_id=client_id).default_scopes.split()
+            return web_provider_models.Client.objects.get(client_id=client_id).default_scopes.split()
         except ObjectDoesNotExist:
             return None
 
@@ -77,9 +76,9 @@ class SkeletonValidator(RequestValidator):
         # request.client, request.state and request.user (the last is passed in
         # post_authorization credentials, i.e. { 'user': request.user}.
         # Warning client_id is not client.pk!
-        client = providers_models.Client.objects.get(client_id=client_id)
+        client = web_provider_models.Client.objects.get(client_id=client_id)
         user = auth_models.User.objects.get(pk=request.user.pk)
-        providers_models.AuthorizationCode.objects.create(
+        web_provider_models.AuthorizationCode.objects.create(
             client=client,
             user=user,
             # FIXME Extracted from dict!
@@ -96,7 +95,7 @@ class SkeletonValidator(RequestValidator):
 
     def authenticate_client(self, request, *args, **kwargs):
         # Whichever authentication method suits you, HTTP Basic might work
-        request.client = providers_models.Client.objects.get(client_id=request.client_id)
+        request.client = web_provider_models.Client.objects.get(client_id=request.client_id)
         return True
 
     def authenticate_client_id(self, client_id, request, *args, **kwargs):
@@ -111,7 +110,7 @@ class SkeletonValidator(RequestValidator):
             return False
 
         try:
-            authorization_code = providers_models.AuthorizationCode.objects.get(client=client, code=code)
+            authorization_code = web_provider_models.AuthorizationCode.objects.get(client=client, code=code)
         except ObjectDoesNotExist:
             return False
 
@@ -123,7 +122,7 @@ class SkeletonValidator(RequestValidator):
     def confirm_redirect_uri(self, client_id, code, redirect_uri, client, *args, **kwargs):
         # You did save the redirect uri with the authorization code right?
         try:
-            authorization_code = providers_models.AuthorizationCode.objects.get(client=client, code=code)
+            authorization_code = web_provider_models.AuthorizationCode.objects.get(client=client, code=code)
         except ObjectDoesNotExist:
             return False
 
@@ -140,7 +139,7 @@ class SkeletonValidator(RequestValidator):
         # the authorization code. Don't forget to save both the
         # access_token and the refresh_token and set expiration for the
         # access_token to now + expires_in seconds.
-        providers_models.Token.objects.create(
+        web_provider_models.Token.objects.create(
             client=request.client,
             user=request.user,
             scopes=request.scopes,
@@ -153,7 +152,7 @@ class SkeletonValidator(RequestValidator):
         # Authorization codes are use once, invalidate it when a Bearer token
         # has been acquired.
         try:
-            providers_models.AuthorizationCode.objects.get(client=request.client, code=code).delete()
+            web_provider_models.AuthorizationCode.objects.get(client=request.client, code=code).delete()
         except ObjectDoesNotExist:
             pass
         return True
@@ -174,7 +173,7 @@ class SkeletonValidator(RequestValidator):
         pass
 
 
-validator = SkeletonValidator()
+validator = WebValidator()
 server = WebApplicationServer(validator)
 provider = OAuth2ProviderDecorator('/error', server)    # See next section
 
@@ -188,14 +187,14 @@ def authorize(request, client_id=None, scopes=None, state=None, redirect_uri=Non
     # select which scopes they allow the client to access.
     response = HttpResponse()
     response.write('<h1>Authorize access to %s</h1>' % client_id)
-    response.write('<form method="POST" action="%s">' % reverse('providers_authorization'))
+    response.write('<form method="POST" action="%s">' % reverse('web_provider_authorization'))
     scopes = ['ham', 'jam']
     for scope in scopes or []:
         response.write('<input type="checkbox" name="scopes" value="%s"/> %s' % (scope, scope))
     response.write('<input type="submit" value="Authorize"/>')
     return response
 
-# @csrf_exempt
+
 @login_required
 @provider.post_authorization_view
 def authorization_response(request):
@@ -226,9 +225,8 @@ def error(request):
     return HttpResponse('Bad client! Warn user!')
 
 
-# FIXME Not used
 @provider.protected_resource_view(scopes=['images'])
-def i_am_protected(request, client, resource_owner, **kwargs):
+def protected_resource(request, client, resource_owner, **kwargs):
     # One of your many OAuth 2 protected resource views
     # Returns whatever you fancy
     # May be bound to various scopes of your choosing

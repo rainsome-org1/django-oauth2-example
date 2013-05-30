@@ -1,5 +1,5 @@
 from django.contrib import admin
-from oauth.providers.models import *
+from oauth.web_provider.models import *
 
 admin.site.register(Client)
 admin.site.register(Token)
