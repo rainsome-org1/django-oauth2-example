@@ -14,9 +14,9 @@ from oauthlib.oauth2 import RequestValidator, WebApplicationServer
 from oauthlib.oauth2.ext.django import OAuth2ProviderDecorator
 
 
-log = logging.getLogger('oauthlib')
-log.addHandler(logging.StreamHandler(sys.stdout))
-log.setLevel(logging.DEBUG)
+# log = logging.getLogger('oauthlib')
+# log.addHandler(logging.StreamHandler(sys.stdout))
+# log.setLevel(logging.DEBUG)
 
 
 class WebValidator(RequestValidator):
@@ -175,7 +175,7 @@ class WebValidator(RequestValidator):
 
 validator = WebValidator()
 server = WebApplicationServer(validator)
-provider = OAuth2ProviderDecorator('/error', server)    # See next section
+provider = OAuth2ProviderDecorator('/error', server)
 
 
 @login_required
