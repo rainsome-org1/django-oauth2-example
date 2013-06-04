@@ -8,7 +8,7 @@ from django.contrib.auth import models as auth_models
 from django.core.urlresolvers import reverse
 from django.test import LiveServerTestCase
 
-from oauth.web_provider import models as web_provider_models
+from endpoint.web_provider import models as web_provider_models
 
 
 class WebProviderTest(LiveServerTestCase):

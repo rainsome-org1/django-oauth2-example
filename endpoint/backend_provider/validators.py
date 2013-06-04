@@ -1,28 +1,22 @@
-import logging
-import sys
 import datetime
 
-from oauthlib.oauth2 import RequestValidator, BackendApplicationServer
-from oauthlib.oauth2.ext.django import OAuth2ProviderDecorator
+from oauthlib.oauth2 import RequestValidator
 
 from django.contrib.auth import get_user_model
-from django.http import HttpResponse
 from django.utils import timezone
 
-from oauth.backend_provider.models import ApplicationClient, ApplicationToken
-
-log = logging.getLogger('oauthlib')
-log.addHandler(logging.StreamHandler(sys.stdout))
-log.setLevel(logging.DEBUG)
+from endpoint.backend_provider.models import ApplicationClient, ApplicationToken
 
 
 class BackendValidator(RequestValidator):
     # Token request
 
     # FIXME No password in backtrace...
+    # FIXME POST instead of GET
+    # FIXME Only one access token at once by client/user pair
     def authenticate_client(self, request, *args, **kwargs):
         client_token = request.headers.get('HTTP_CLIENT')
-        if not ':' in client_token:
+        if not client_token or not ':' in client_token:
             return False
 
         client_id, client_secret = client_token.split(':')
@@ -95,33 +89,11 @@ class BackendValidator(RequestValidator):
             app_token_scopes = set(app_token.scopes.split())
             scopes = set(scopes)
             if scopes.intersection(app_token_scopes):
+                request.client = app_token.application
+                request.user = app_token.user
                 return True
+
         except ApplicationToken.DoesNotExist:
             pass
 
         return False
-
-
-validator = BackendValidator()
-server = BackendApplicationServer(validator)
-provider = OAuth2ProviderDecorator('/backendprovider/error', server)    # See next section
-
-
-@provider.access_token_view
-def create_token(request):
-    # Not much too do here for you, return a dict with extra credentials
-    # you want appended to request.credentials passed to the save_bearer_token
-    # method of the validator.
-    return {}
-
-
-@provider.protected_resource_view(scopes=['ham'])
-def protected_resource(request, client=None, user=None, scopes=None):
-    # One of your many OAuth 2 protected resource views
-    # Returns whatever you fancy
-    # May be bound to various scopes of your choosing
-    return HttpResponse('Pictures of cats')
-
-
-def error(request):
-    return HttpResponse('fail')

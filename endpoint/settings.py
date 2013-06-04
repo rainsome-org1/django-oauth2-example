@@ -1,4 +1,4 @@
-# Django settings for oauth project.
+# Django settings for endpoint project.
 import os
 
 ROOT_PATH = os.path.realpath('.')
@@ -15,8 +15,8 @@ MANAGERS = ADMINS
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.postgresql_psycopg2', # Add 'postgresql_psycopg2', 'mysql', 'sqlite3' or 'oracle'.
-        'NAME': 'oauth',                      # Or path to database file if using sqlite3.
+        'ENGINE': 'django.db.backends.postgresql_psycopg2',
+        'NAME': 'endpoint',                      # Or path to database file if using sqlite3.
         'USER': 'sra',                      # Not used with sqlite3.
         'PASSWORD': '',                  # Not used with sqlite3.
         'HOST': '',                      # Set to empty string for localhost. Not used with sqlite3.
@@ -105,10 +105,10 @@ MIDDLEWARE_CLASSES = (
     # 'django.middleware.clickjacking.XFrameOptionsMiddleware',
 )
 
-ROOT_URLCONF = 'oauth.urls'
+ROOT_URLCONF = 'endpoint.urls'
 
 # Python dotted path to the WSGI application used by Django's runserver.
-WSGI_APPLICATION = 'oauth.wsgi.application'
+WSGI_APPLICATION = 'endpoint.wsgi.application'
 
 TEMPLATE_DIRS = (
     os.path.join(PROJECT_PATH, 'templates'),
@@ -122,10 +122,12 @@ INSTALLED_APPS = (
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'django.contrib.admin',
-    'oauth.core',
-    'oauth.accounts',
-    'oauth.web_provider',
-    'oauth.backend_provider',
+    'tastypie',
+    'endpoint.api',
+    'endpoint.core',
+    'endpoint.accounts',
+    'endpoint.web_provider',
+    'endpoint.backend_provider',
 )
 
 # A sample logging configuration. The only tangible logging

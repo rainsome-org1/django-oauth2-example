@@ -9,7 +9,7 @@ from django.test import LiveServerTestCase
 from oauthlib.oauth2 import BackendApplicationClient
 from requests_oauthlib import OAuth2
 
-from oauth.backend_provider import models as backend_models
+from endpoint.backend_provider import models as backend_models
 
 
 class BackendProviderTest(LiveServerTestCase):

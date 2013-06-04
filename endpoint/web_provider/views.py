@@ -9,14 +9,14 @@ from django.core.urlresolvers import reverse
 from django.http import HttpResponse
 from django.utils import timezone
 
-from oauth.web_provider import models as web_provider_models
+from endpoint.web_provider import models as web_provider_models
 from oauthlib.oauth2 import RequestValidator, WebApplicationServer
 from oauthlib.oauth2.ext.django import OAuth2ProviderDecorator
 
 
-# log = logging.getLogger('oauthlib')
-# log.addHandler(logging.StreamHandler(sys.stdout))
-# log.setLevel(logging.DEBUG)
+log = logging.getLogger('oauthlib')
+log.addHandler(logging.StreamHandler(sys.stdout))
+log.setLevel(logging.DEBUG)
 
 
 class WebValidator(RequestValidator):
@@ -115,7 +115,6 @@ class WebValidator(RequestValidator):
             return False
 
         request.scopes = authorization_code.scopes.split()
-        print request.scopes
         request.user = client.user
         return True
 
