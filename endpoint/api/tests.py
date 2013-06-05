@@ -51,12 +51,12 @@ class ApiAuthenticationTest(TestCase):
             'HTTP_ACCEPT': 'application/json',
             'HTTP_CLIENT': '%s:%s' % (self.application.client_id, self.application.secret),
         }
-        params = {
-            'grant_type': 'client_credentials',
+        data = {
             'username': self.user.username,
-            'password': self.password
+            'password': self.password,
+            'grant_type': 'client_credentials',
         }
-        r = self.client.get(url, params, **headers)
+        r = self.client.post(url, data, **headers)
         self.assertEqual(r.status_code, 200)
 
         token = json.loads(r.content)
