@@ -4,6 +4,7 @@ from oauthlib.oauth2 import RequestValidator
 
 from django.contrib.auth import get_user_model
 from django.utils import timezone
+from django.views.decorators.debug import sensitive_variables, sensitive_post_parameters
 
 from endpoint.backend_provider.models import ApplicationClient, ApplicationToken
 
@@ -11,9 +12,9 @@ from endpoint.backend_provider.models import ApplicationClient, ApplicationToken
 class BackendValidator(RequestValidator):
     # Token request
 
-    # FIXME No password in backtrace...
-    # FIXME POST instead of GET
     # FIXME Only one access token at once by client/user pair
+    @sensitive_variables('username', 'password')
+    @sensitive_post_parameters('username', 'password')
     def authenticate_client(self, request, *args, **kwargs):
         client_token = request.headers.get('HTTP_CLIENT')
         if not client_token or not ':' in client_token:
