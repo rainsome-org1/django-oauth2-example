@@ -50,12 +50,17 @@ class BackendProviderTest(LiveServerTestCase):
         }
         r = requests.get(url, headers=headers, params=credentials, verify=False)
         self.assertEqual(r.status_code, 200)
+        self.assertEqual(backend_models.ApplicationToken.objects.count(), 1)
 
         # Test POST
         r = requests.post(url, credentials, headers=headers, verify=False)
         self.assertEqual(r.status_code, 200)
+        self.assertEqual(backend_models.ApplicationToken.objects.count(), 1)
 
         token = json.loads(r.content)
+
+        # Check only one token in DB
+
         oauth2 = OAuth2(client=backend, token=token)
         url = self.live_url + reverse('backend_provider_protected_resource')
         r = requests.get(url, auth=oauth2, verify=False)

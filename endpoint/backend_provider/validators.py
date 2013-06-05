@@ -12,7 +12,6 @@ from endpoint.backend_provider.models import ApplicationClient, ApplicationToken
 class BackendValidator(RequestValidator):
     # Token request
 
-    # FIXME Only one access token at once by client/user pair
     @sensitive_variables('username', 'password')
     @sensitive_post_parameters('username', 'password')
     def authenticate_client(self, request, *args, **kwargs):
@@ -73,6 +72,11 @@ class BackendValidator(RequestValidator):
         return True
 
     def save_bearer_token(self, token, request, *args, **kwargs):
+        # Only one token by client/user
+        ApplicationToken.objects.filter(
+            application=request.client,
+            user=request.user).delete()
+
         ApplicationToken.objects.create(
             application=request.client,
             user=request.user,
