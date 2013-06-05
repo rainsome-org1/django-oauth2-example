@@ -88,21 +88,22 @@ class BackendValidator(RequestValidator):
     # Protected resource request
 
     def validate_bearer_token(self, token, scopes, request):
-        # Remember to check expiration and scope membership
-        # FIXME Not sure about scopes meaning
+        # Scopes of application token are the allowed scopes and  all requested
+        # scopes must be present in application token scopes.
         try:
             app_token = ApplicationToken.objects.get(
                 access_token=token,
                 expires_at__gte=timezone.now()
             )
-            app_token_scopes = set(app_token.scopes.split())
-            scopes = set(scopes)
-            if scopes.intersection(app_token_scopes):
-                request.client = app_token.application
-                request.user = app_token.user
-                return True
+
+            app_token_scopes = app_token.scopes.split()
+            for scope in scopes:
+                if scope not in app_token_scopes:
+                    return False
 
         except ApplicationToken.DoesNotExist:
-            pass
+            return False
 
-        return False
+        request.client = app_token.application
+        request.user = app_token.user
+        return True
