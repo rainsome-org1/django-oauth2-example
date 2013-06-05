@@ -41,12 +41,18 @@ class BackendProviderTest(LiveServerTestCase):
         headers = {
             'client': '%s:%s' % (self.application.client_id, self.application.secret)
         }
-        params = {
-            'grant_type': 'client_credentials',
+
+        # Test GET
+        credentials = {
+            'password': self.password,
             'username': self.user.username,
-            'password': self.password
+            'grant_type': 'client_credentials',
         }
-        r = requests.get(url, headers=headers, params=params, verify=False)
+        r = requests.get(url, headers=headers, params=credentials, verify=False)
+        self.assertEqual(r.status_code, 200)
+
+        # Test POST
+        r = requests.post(url, credentials, headers=headers, verify=False)
         self.assertEqual(r.status_code, 200)
 
         token = json.loads(r.content)
@@ -55,4 +61,3 @@ class BackendProviderTest(LiveServerTestCase):
         r = requests.get(url, auth=oauth2, verify=False)
         self.assertEqual(r.status_code, 200)
         self.assertEqual(r.content, "Pictures of cats")
-        # Test with OAuth2Session
