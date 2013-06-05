@@ -27,7 +27,7 @@ class BackendAuthentication(Authentication):
         self.validator = BackendValidator()
         self.server = BackendApplicationServer(self.validator)
         self.provider = OAuth2ProviderDecorator('/error', self.server)
-        # FIXME
+        # FIXME Must be given by the ressource
         self.scopes = ['ham', 'jam']
 
     def _unauthorized(self):

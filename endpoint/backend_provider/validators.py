@@ -29,9 +29,13 @@ class BackendValidator(RequestValidator):
             return False
 
         # Authenticate client
-        params = dict(request.uri_query_params)
+        if request.http_method == 'POST':
+            params = dict(request.decoded_body)
+        else:
+            params = dict(request.uri_query_params)
         username = params.get('username')
         password = params.get('password')
+
         if not username or not password:
             return False
 
